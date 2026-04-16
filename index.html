@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Lab 4 – POS System UI Design | AT80.02</title>
+<style>
+/* ── Reset & Base ─────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#eef1f7;color:#1a1f2e;min-height:100vh}
+:root{
+  --navy:#1c3462;--blue:#2d6bcf;--blue2:#3d7fe8;--sky:#ddeeff;
+  --sidebar:#1b2b50;--sidhl:#2d3f6e;--sideact:#3d7fe8;
+  --white:#fff;--bg:#eef1f7;--border:#d0d8e8;
+  --input:#f4f6fb;--label:#636d82;--muted:#8892a4;
+  --text:#1a1f2e;--green:#0f9e60;--greenBg:#e6f9f0;
+  --red:#d32f2f;--redBg:#fdecea;--amber:#c97a0a;--amberBg:#fff3e0;
+  --gray:#8a929f;--rowEven:#f7f9fc;--shadow:0 4px 18px rgba(0,0,0,.10);
+}
+
+/* ── Layout ───────────────────────────────────────────────── */
+.app-shell{display:flex;flex-direction:column;min-height:100vh}
+
+/* ── Top bar ──────────────────────────────────────────────── */
+.topbar{background:var(--navy);color:#fff;padding:0 28px;height:56px;display:flex;align-items:center;gap:20px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.topbar-logo{font-size:1.15rem;font-weight:700;letter-spacing:.3px;display:flex;align-items:center;gap:8px}
+.topbar-logo span{opacity:.6;font-size:.85rem;font-weight:400}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:16px;font-size:.82rem;opacity:.75}
+
+/* ── Tab bar ──────────────────────────────────────────────── */
+.tabbar{background:var(--navy);display:flex;overflow-x:auto;border-top:1px solid rgba(255,255,255,.1);flex-shrink:0}
+.tabbar::-webkit-scrollbar{height:3px}
+.tabbar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2)}
+.tab{padding:0 22px;height:44px;display:flex;align-items:center;gap:8px;color:rgba(255,255,255,.55);font-size:.82rem;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;transition:all .2s;user-select:none}
+.tab:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.06)}
+.tab.active{color:#fff;border-bottom-color:var(--sideact);background:rgba(255,255,255,.08);font-weight:600}
+.tab-icon{font-size:1rem}
+
+/* ── Main ─────────────────────────────────────────────────── */
+.main{display:flex;flex:1;overflow:hidden}
+
+/* ── Sidebar ──────────────────────────────────────────────── */
+.sidebar{width:200px;background:var(--sidebar);flex-shrink:0;display:flex;flex-direction:column;padding-top:12px}
+.sidebar-label{font-size:.68rem;font-weight:600;color:rgba(255,255,255,.35);letter-spacing:.08em;padding:8px 16px 6px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:12px 16px;color:rgba(255,255,255,.55);font-size:.82rem;cursor:pointer;transition:all .15s;border-left:3px solid transparent;user-select:none}
+.nav-item:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.06)}
+.nav-item.active{color:#fff;background:var(--sidhl);border-left-color:var(--sideact);font-weight:600}
+.nav-item .ni{font-size:1rem;flex-shrink:0}
+
+/* ── Content ──────────────────────────────────────────────── */
+.content{flex:1;overflow-y:auto;padding:28px;display:none}
+.content.active{display:block}
+.content::-webkit-scrollbar{width:6px}
+.content::-webkit-scrollbar-thumb{background:#c0c8d8;border-radius:3px}
+
+/* ── Page title ───────────────────────────────────────────── */
+.page-title{font-size:1.4rem;font-weight:700;color:var(--navy);margin-bottom:4px}
+.page-sub{color:var(--muted);font-size:.88rem;margin-bottom:22px}
+
+/* ── Card ─────────────────────────────────────────────────── */
+.card{background:var(--white);border-radius:12px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden}
+.card-head{padding:14px 18px;font-weight:600;font-size:.9rem;color:var(--blue);border-bottom:1px solid var(--border);background:#f8faff}
+.card-body{padding:18px}
+
+/* ── Form ─────────────────────────────────────────────────── */
+.form-row{display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap}
+.form-group{display:flex;flex-direction:column;gap:5px;flex:1;min-width:140px}
+.form-group.w-full{flex-basis:100%}
+.form-group.w-2{flex:2}
+.form-group.w-3{flex:3}
+label.lbl{font-size:.75rem;font-weight:600;color:var(--label);letter-spacing:.02em}
+.req{color:var(--red)}
+input.inp,select.inp,textarea.inp{border:1px solid var(--border);border-radius:7px;padding:8px 12px;font-size:.85rem;background:var(--input);color:var(--text);outline:none;width:100%;transition:border .15s;font-family:inherit;resize:vertical}
+input.inp:focus,select.inp:focus,textarea.inp:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px rgba(45,107,207,.1)}
+input.inp[readonly],input.inp.ro{background:#eef0f5;color:var(--muted);cursor:default}
+input.inp::placeholder{color:var(--muted)}
+
+/* ── Buttons ──────────────────────────────────────────────── */
+.btn-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-top:6px}
+.btn{padding:8px 18px;border-radius:7px;font-size:.84rem;font-weight:600;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:filter .15s,transform .1s}
+.btn:hover{filter:brightness(1.08)}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-green{background:var(--green);color:#fff}
+.btn-red{background:var(--red);color:#fff}
+.btn-gray{background:var(--gray);color:#fff}
+.btn-outline{background:#fff;color:var(--blue);border:1.5px solid var(--blue)}
+.btn-amber{background:var(--amber);color:#fff}
+.btn-navy{background:var(--navy);color:#fff}
+
+/* ── Table ────────────────────────────────────────────────── */
+.tbl-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+thead tr{background:var(--blue)}
+thead th{color:#fff;padding:10px 12px;text-align:left;font-weight:600;white-space:nowrap}
+tbody tr:nth-child(even){background:var(--rowEven)}
+tbody tr:hover{background:#edf3fb}
+tbody td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--text)}
+tbody tr:last-child td{border-bottom:none}
+.tbl-footer{padding:10px 14px;font-size:.78rem;color:var(--muted);background:#f8faff;border-top:1px solid var(--border)}
+
+/* ── Badge ────────────────────────────────────────────────── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 12px;border-radius:20px;font-size:.75rem;font-weight:600}
+.badge-green{background:var(--greenBg);color:var(--green)}
+.badge-red{background:var(--redBg);color:var(--red)}
+.badge-amber{background:var(--amberBg);color:var(--amber)}
+.badge-blue{background:var(--sky);color:var(--navy)}
+
+/* ── Alert banner ─────────────────────────────────────────── */
+.alert{padding:12px 16px;border-radius:8px;font-size:.84rem;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px}
+.alert-info{background:var(--sky);color:var(--navy);border:1px solid #b0d0f0}
+.alert-success{background:var(--greenBg);color:var(--green);border:1px solid #a0e0c0}
+.alert-warning{background:var(--amberBg);color:var(--amber);border:1px solid #f0c060}
+.alert-error{background:var(--redBg);color:var(--red);border:1px solid #f0a0a0}
+.alert-icon{font-size:1.1rem;flex-shrink:0;margin-top:1px}
+
+/* ── Summary strip ────────────────────────────────────────── */
+.summary-strip{background:var(--sky);border:1px solid #b0d0f0;border-radius:10px;padding:12px 18px;margin-bottom:18px;display:flex;gap:32px;flex-wrap:wrap}
+.strip-item{display:flex;flex-direction:column;gap:2px}
+.strip-key{font-size:.72rem;color:var(--label);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.strip-val{font-size:.92rem;font-weight:600;color:var(--navy)}
+
+/* ── Stat boxes ───────────────────────────────────────────── */
+.stat-row{display:flex;gap:14px;margin-bottom:18px;flex-wrap:wrap}
+.stat-box{flex:1;min-width:160px;background:var(--white);border:1px solid var(--border);border-radius:10px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:4px}
+.stat-label{font-size:.72rem;color:var(--muted);font-weight:600;text-transform:uppercase}
+.stat-val{font-size:1.45rem;font-weight:700;color:var(--navy)}
+.stat-sub{font-size:.75rem;color:var(--muted)}
+.stat-box.green{border-left:4px solid var(--green)}
+.stat-box.amber{border-left:4px solid var(--amber)}
+.stat-box.blue{border-left:4px solid var(--blue)}
+.stat-box.red{border-left:4px solid var(--red)}
+
+/* ── Invoice / print layout ───────────────────────────────── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:800px){.two-col{grid-template-columns:1fr}}
+
+.doc-header{background:var(--navy);color:#fff;padding:16px 18px;border-radius:8px 8px 0 0}
+.doc-header h3{font-size:1rem;font-weight:700;margin-bottom:2px}
+.doc-header p{font-size:.78rem;opacity:.7}
+.doc-body{padding:16px 18px}
+.doc-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:.83rem}
+.doc-row.total{font-weight:700;font-size:.95rem;color:var(--navy);border-top:2px solid var(--border);margin-top:6px;padding-top:10px}
+.doc-divider{border:none;border-top:1px solid var(--border);margin:10px 0}
+
+/* ── EIF notice ───────────────────────────────────────────── */
+.eif-tag{display:inline-flex;align-items:center;gap:6px;background:#f0f4ff;border:1px solid #c0d0f0;border-radius:6px;padding:4px 10px;font-size:.75rem;color:var(--blue);font-weight:600}
+
+/* ── Credit score display ─────────────────────────────────── */
+.credit-result{display:flex;gap:20px;flex-wrap:wrap;padding:8px 0}
+.credit-field{display:flex;flex-direction:column;gap:3px}
+.credit-key{font-size:.72rem;color:var(--label);font-weight:600;text-transform:uppercase}
+.credit-val{font-size:1.1rem;font-weight:700;color:var(--text)}
+.credit-score-big{font-size:2rem;font-weight:800;color:var(--blue)}
+
+/* ── Balance change display ───────────────────────────────── */
+.balance-row{display:flex;gap:14px;align-items:stretch;margin:14px 0;flex-wrap:wrap}
+.bal-box{flex:1;min-width:140px;border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.bal-box.prev{background:#f0f4fb;border:1px solid var(--border)}
+.bal-box.add{background:var(--amberBg);border:1px solid #f0c060}
+.bal-box.new{background:var(--greenBg);border:1px solid #a0e0c0}
+.bal-lbl{font-size:.72rem;font-weight:600;text-transform:uppercase;color:var(--muted)}
+.bal-val{font-size:1.4rem;font-weight:800}
+.bal-sub{font-size:.72rem;color:var(--muted)}
+
+/* ── Workflow FP annotation ───────────────────────────────── */
+.fp-bar{background:#f5f7ff;border:1px solid #d0d8f0;border-radius:8px;padding:10px 14px;font-size:.78rem;color:var(--blue);display:flex;align-items:center;gap:8px;margin-top:4px}
+
+/* ── Signature field ──────────────────────────────────────── */
+.sig-box{border-bottom:2px solid var(--border);height:40px;margin-top:6px;border-radius:0}
+
+/* ── Scrollbar global ─────────────────────────────────────── */
+html{scrollbar-width:thin;scrollbar-color:#c0c8d8 transparent}
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+<!-- ── Top bar ──────────────────────────────────────────── -->
+<div class="topbar">
+  <div class="topbar-logo">🏪 POS System <span>Point of Purchase</span></div>
+  <div class="topbar-right">
+    <span>📦 Inventory: 247 items</span>
+    <span>👤 Admin User</span>
+    <span>16 Apr 2026</span>
+  </div>
+</div>
+
+<!-- ── Tab bar ──────────────────────────────────────────── -->
+<div class="tabbar">
+  <div class="tab active" data-page="p1" onclick="switchPage('p1')"><span class="tab-icon">👥</span>Customer Mgmt</div>
+  <div class="tab" data-page="p2" onclick="switchPage('p2')"><span class="tab-icon">💳</span>Check Credit</div>
+  <div class="tab" data-page="p3" onclick="switchPage('p3')"><span class="tab-icon">📋</span>Order Entry</div>
+  <div class="tab" data-page="p4" onclick="switchPage('p4')"><span class="tab-icon">📦</span>Goods Availability</div>
+  <div class="tab" data-page="p5" onclick="switchPage('p5')"><span class="tab-icon">🔄</span>Stock &amp; Account</div>
+  <div class="tab" data-page="p6" onclick="switchPage('p6')"><span class="tab-icon">🖨</span>Dispatch &amp; Invoice</div>
+</div>
+
+<div class="main">
+<!-- ── Sidebar ───────────────────────────────────────────── -->
+<div class="sidebar">
+  <div class="sidebar-label">Navigation</div>
+  <div class="nav-item active" data-page="p1" onclick="switchPage('p1')"><span class="ni">👥</span>Customer Mgmt</div>
+  <div class="nav-item" data-page="p2" onclick="switchPage('p2')"><span class="ni">💳</span>Check Credit</div>
+  <div class="nav-item" data-page="p3" onclick="switchPage('p3')"><span class="ni">📋</span>Order Entry</div>
+  <div class="nav-item" data-page="p4" onclick="switchPage('p4')"><span class="ni">📦</span>Goods Availability</div>
+  <div class="nav-item" data-page="p5" onclick="switchPage('p5')"><span class="ni">🔄</span>Stock &amp; Account</div>
+  <div class="nav-item" data-page="p6" onclick="switchPage('p6')"><span class="ni">🖨</span>Dispatch &amp; Invoice</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     PAGE 1 – Customer Management
+═════════════════════════════════════════════════════════ -->
+<div class="content active" id="p1">
+  <div class="page-title">Customer Management</div>
+  <div class="page-sub">Search for existing customers or register new customer records. Maximum 100 records.</div>
+
+  <!-- Search -->
+  <div class="card">
+    <div class="card-head">🔍 Search Customer</div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group w-3"><label class="lbl">Customer Name / ID</label>
+          <input class="inp" type="text" placeholder="Enter customer name or ID…" value="Somchai"></div>
+        <div class="form-group" style="flex:0 0 auto;justify-content:flex-end;padding-top:20px">
+          <div class="btn-row">
+            <button class="btn btn-primary">🔍 Search</button>
+            <button class="btn btn-gray">⟳ Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="card">
+    <div class="card-head">📋 Search Results</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Customer Name</th><th>Phone</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+          <tr><td>C001</td><td>Somchai Jaidee</td><td>081-234-5678</td><td>somchai@email.com</td><td><span class="badge badge-green">✔ Active</span></td><td><button class="btn btn-outline" style="padding:4px 10px;font-size:.76rem">View</button> <button class="btn btn-gray" style="padding:4px 10px;font-size:.76rem">Edit</button></td></tr>
+          <tr><td>C002</td><td>Malee Sriwong</td><td>092-345-6789</td><td>malee@email.com</td><td><span class="badge badge-green">✔ Active</span></td><td><button class="btn btn-outline" style="padding:4px 10px;font-size:.76rem">View</button> <button class="btn btn-gray" style="padding:4px 10px;font-size:.76rem">Edit</button></td></tr>
+          <tr><td>C003</td><td>Prasit Kaewmee</td><td>086-456-7890</td><td>prasit@email.com</td><td><span class="badge badge-amber">⚠ Inactive</span></td><td><button class="btn btn-outline" style="padding:4px 10px;font-size:.76rem">View</button> <button class="btn btn-gray" style="padding:4px 10px;font-size:.76rem">Edit</button></td></tr>
+        </tbody>
+      </table>
+      <div class="tbl-footer">Showing 3 of 47 results — Page 1 of 16</div>
+    </div>
+  </div>
+
+  <!-- Add form -->
+  <div class="card">
+    <div class="card-head">✚ Add New Customer</div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group"><label class="lbl">Customer ID</label><input class="inp ro" readonly value="Auto-generated"></div>
+        <div class="form-group w-2"><label class="lbl">Customer Name <span class="req">*</span></label><input class="inp" placeholder="Full name as per ID"></div>
+        <div class="form-group"><label class="lbl">Customer Type</label>
+          <select class="inp"><option>Individual</option><option>Corporate</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="lbl">Phone Number <span class="req">*</span></label><input class="inp" placeholder="e.g. 081-234-5678"></div>
+        <div class="form-group w-2"><label class="lbl">Email Address</label><input class="inp" placeholder="name@email.com"></div>
+        <div class="form-group"><label class="lbl">Credit Limit (฿)</label><input class="inp" placeholder="50,000"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group w-full"><label class="lbl">Address</label><textarea class="inp" rows="2" placeholder="Street, district, province…"></textarea></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="lbl">Date Registered</label><input class="inp ro" readonly value="16 Apr 2026"></div>
+        <div class="form-group"><label class="lbl">Registered By</label><input class="inp ro" readonly value="Admin"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-green">✚ Add Customer</button>
+        <button class="btn btn-gray">⟳ Clear Form</button>
+        <span style="font-size:.76rem;color:var(--muted);margin-left:auto">* Required fields</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     PAGE 2 – Check Credit
+═════════════════════════════════════════════════════════ -->
+<div class="content" id="p2">
+  <div class="page-title">Check Credit</div>
+  <div class="page-sub">Query the external credit rating system to verify customer creditworthiness.</div>
+
+  <div class="alert alert-info"><span class="alert-icon">ℹ️</span><div><strong>External Interface File (EIF):</strong> The credit rating data is maintained by the National Credit Bureau — an external system. The POS system reads this data but cannot modify it. This page is classified as an <strong>External Inquiry (EQ)</strong>.</div></div>
+
+  <div class="card">
+    <div class="card-head">💳 Credit Check Query</div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group w-2"><label class="lbl">Customer Name <span class="req">*</span></label><input class="inp" placeholder="Enter customer full name…" value="Somchai Jaidee"></div>
+        <div class="form-group"><label class="lbl">Customer ID (optional)</label><input class="inp" placeholder="e.g. C001"></div>
+        <div class="form-group" style="flex:0 0 auto;padding-top:20px">
+          <button class="btn btn-primary">💳 Check Credit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">📊 Credit Rating Result</div>
+    <div class="card-body">
+      <div class="credit-result">
+        <div class="credit-field"><span class="credit-key">Customer</span><span class="credit-val">Somchai Jaidee (C001)</span></div>
+        <div class="credit-field"><span class="credit-key">Credit Status</span><span><span class="badge badge-green" style="font-size:.9rem;padding:6px 18px">✔ GOOD</span></span></div>
+        <div class="credit-field"><span class="credit-key">Credit Score</span><span class="credit-score-big">742<span style="font-size:1rem;color:var(--muted)">/850</span></span></div>
+        <div class="credit-field"><span class="credit-key">Last Updated</span><span class="credit-val">15 Apr 2026</span></div>
+        <div class="credit-field"><span class="credit-key">Response Time</span><span class="credit-val">0.4 sec</span></div>
+      </div>
+      <hr class="doc-divider">
+      <div style="font-size:.78rem;color:var(--muted)">Source: National Credit Bureau (External System) &nbsp;|&nbsp; Confidence: High &nbsp;|&nbsp; Query ID: QRY-20260416-1023</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">📖 Credit Status Reference</div>
+    <div class="card-body">
+      <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center">
+        <div style="display:flex;align-items:center;gap:10px"><span class="badge badge-green" style="font-size:.85rem;padding:5px 14px">✔ Good</span><span style="font-size:.82rem;color:var(--muted)">Low risk — credit approved automatically</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><span class="badge badge-amber" style="font-size:.85rem;padding:5px 14px">⚠ Fair</span><span style="font-size:.82rem;color:var(--muted)">Medium risk — requires manual review</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><span class="badge badge-red" style="font-size:.85rem;padding:5px 14px">✖ Poor</span><span style="font-size:.82rem;color:var(--muted)">High risk — credit declined</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     PAGE 3 – Order Entry
+═════════════════════════════════════════════════════════ -->
+<div class="content" id="p3">
+  <div class="page-title">Order Entry</div>
+  <div class="page-sub">Enter the goods being ordered by the customer. All items are checked against stock availability.</div>
+
+  <div class="card">
+    <div class="card-head">📋 Order Information</div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group"><label class="lbl">Order ID</label><input class="inp ro" readonly value="ORD-0042"></div>
+        <div class="form-group"><label class="lbl">Order Date</label><input class="inp ro" readonly value="16 Apr 2026"></div>
+        <div class="form-group w-2"><label class="lbl">Customer ID <span class="req">*</span></label>
+          <select class="inp"><option>C001 – Somchai Jaidee</option><option>C002 – Malee Sriwong</option><option>C003 – Prasit Kaewmee</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group w-full"><label class="lbl">Delivery Address (auto-filled)</label><input class="inp ro" readonly value="123 Main St, Sukhumvit, Bangkok 10110"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">➕ Add Item to Order</div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group"><label class="lbl">Item Code <span class="req">*</span></label><input class="inp" placeholder="e.g. ITM-001" value="ITM-001"></div>
+        <div class="form-group w-2"><label class="lbl">Item Description (auto-filled)</label><input class="inp ro" readonly value="Coffee Maker"></div>
+        <div class="form-group"><label class="lbl">Unit Price (auto-filled)</label><input class="inp ro" readonly value="฿ 1,200"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="lbl">Quantity Ordered <span class="req">*</span></label><input class="inp" type="number" value="2" min="1"></div>
+        <div class="form-group"><label class="lbl">Line Total (auto-calculated)</label><input class="inp ro" readonly value="฿ 2,400"></div>
+        <div class="form-group" style="flex:0 0 auto;padding-top:20px">
+          <div class="btn-row">
+            <button class="btn btn-green">✚ Add Item</button>
+            <button class="btn btn-outline">🔍 Lookup</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">🛒 Order Items</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Item Code</th><th>Description</th><th>Qty</th><th>Unit Price</th><th>Line Total</th><th>Remove</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>ITM-001</td><td>Coffee Maker</td><td>2</td><td>฿ 1,200</td><td><strong>฿ 2,400</strong></td><td><button class="btn btn-red" style="padding:3px 10px;font-size:.75rem">✖</button></td></tr>
+          <tr><td>2</td><td>ITM-005</td><td>Paper Cups (100 pcs)</td><td>5</td><td>฿ 120</td><td><strong>฿ 600</strong></td><td><button class="btn btn-red" style="padding:3px 10px;font-size:.75rem">✖</button></td></tr>
+          <tr><td>3</td><td>ITM-012</td><td>Stainless Steel Mug</td><td>3</td><td>฿ 350</td><td><strong>฿ 1,050</strong></td><td><button class="btn btn-red" style="padding:3px 10px;font-size:.75rem">✖</button></td></tr>
+        </tbody>
+      </table>
+      <div class="tbl-footer" style="display:flex;justify-content:space-between;align-items:center">
+        <span>3 items</span>
+        <span style="font-size:.9rem;font-weight:700;color:var(--navy)">Order Total: ฿ 4,050</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">📝 Remarks</div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group w-full"><label class="lbl">Order Notes / Special Instructions</label><textarea class="inp" rows="2" placeholder="e.g. Handle with care, deliver before 5pm…"></textarea></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="switchPage('p4')">✔ Submit Order →</button>
+        <button class="btn btn-gray">✖ Cancel Order</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     PAGE 4 – Goods Availability Check
+═════════════════════════════════════════════════════════ -->
+<div class="content" id="p4">
+  <div class="page-title">Goods Availability Check</div>
+  <div class="page-sub">Verify that sufficient stock is available in the inventory before confirming the order.</div>
+
+  <div class="summary-strip">
+    <div class="strip-item"><span class="strip-key">Order Reference</span><span class="strip-val">ORD-0042</span></div>
+    <div class="strip-item"><span class="strip-key">Customer</span><span class="strip-val">Somchai Jaidee (C001)</span></div>
+    <div class="strip-item"><span class="strip-key">Order Date</span><span class="strip-val">16 Apr 2026</span></div>
+    <div class="strip-item"><span class="strip-key">Total Items</span><span class="strip-val">3 lines</span></div>
+    <div class="strip-item"><span class="strip-key">Order Total</span><span class="strip-val">฿ 4,050</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">📦 Stock Availability Check</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Item Code</th><th>Description</th><th>Qty Ordered</th><th>Stock Available</th><th>Status</th><th>Deficit</th></tr></thead>
+        <tbody>
+          <tr><td>ITM-001</td><td>Coffee Maker</td><td>2</td><td>10 units</td><td><span class="badge badge-green">✔ Available</span></td><td>—</td></tr>
+          <tr><td>ITM-005</td><td>Paper Cups (100 pcs)</td><td>5</td><td>3 units</td><td><span class="badge badge-red">✖ Insufficient</span></td><td>2 units short</td></tr>
+          <tr><td>ITM-012</td><td>Stainless Steel Mug</td><td>3</td><td>20 units</td><td><span class="badge badge-green">✔ Available</span></td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="fp-bar">ℹ️ Reads from <strong>Stock/Inventory File (ILF)</strong> — classified as an <strong>External Inquiry (EQ)</strong>. No data is written at this stage.</div>
+  </div>
+
+  <div class="alert alert-warning"><span class="alert-icon">⚠️</span><div><strong>Insufficient Stock Detected:</strong> Item ITM-005 (Paper Cups) has only 3 units in stock but 5 were ordered. Please adjust the quantity or wait for restock before confirming.</div></div>
+
+  <div class="card">
+    <div class="card-head">⚙️ Actions</div>
+    <div class="card-body">
+      <p style="font-size:.85rem;color:var(--muted);margin-bottom:14px">Choose how to proceed with this order:</p>
+      <div class="btn-row">
+        <button class="btn btn-green" onclick="switchPage('p5')">✔ Confirm Order (Adjust Stock) →</button>
+        <button class="btn btn-amber" onclick="switchPage('p3')">✏ Edit Order (Adjust Qty)</button>
+        <button class="btn btn-gray">✖ Cancel Order</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     PAGE 5 – Stock Update & Account Update
+═════════════════════════════════════════════════════════ -->
+<div class="content" id="p5">
+  <div class="page-title">Stock Update &amp; Account Update</div>
+  <div class="page-sub">Update inventory levels and customer account balance after order confirmation.</div>
+
+  <div class="summary-strip">
+    <div class="strip-item"><span class="strip-key">Order</span><span class="strip-val">ORD-0042</span></div>
+    <div class="strip-item"><span class="strip-key">Customer</span><span class="strip-val">Somchai Jaidee (C001)</span></div>
+    <div class="strip-item"><span class="strip-key">Confirmed</span><span class="strip-val">16 Apr 2026, 10:32 AM</span></div>
+    <div class="strip-item"><span class="strip-key">Total</span><span class="strip-val">฿ 4,050</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">📦 Stock Level Update <span class="eif-tag" style="margin-left:8px">EI — External Input</span></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Item Code</th><th>Description</th><th>Qty Ordered</th><th>Previous Stock</th><th>New Stock Level</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>ITM-001</td><td>Coffee Maker</td><td>2</td><td>10 units</td><td><strong>8 units</strong></td><td><span class="badge badge-green">✔ Updated</span></td></tr>
+          <tr><td>ITM-005</td><td>Paper Cups (100 pcs)</td><td>5</td><td>10 units</td><td><strong>5 units</strong></td><td><span class="badge badge-green">✔ Updated</span></td></tr>
+          <tr><td>ITM-012</td><td>Stainless Steel Mug</td><td>3</td><td>20 units</td><td><strong>17 units</strong></td><td><span class="badge badge-green">✔ Updated</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="fp-bar">Decrements <strong>Stock/Inventory File (ILF)</strong> — classified as an <strong>External Input (EI)</strong>.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">💰 Customer Account Update <span class="eif-tag" style="margin-left:8px">EI — External Input</span></div>
+    <div class="card-body">
+      <div class="form-row" style="margin-bottom:8px">
+        <div class="form-group"><label class="lbl">Customer ID</label><input class="inp ro" readonly value="C001"></div>
+        <div class="form-group w-2"><label class="lbl">Customer Name</label><input class="inp ro" readonly value="Somchai Jaidee"></div>
+        <div class="form-group"><label class="lbl">Account Type</label><input class="inp ro" readonly value="Individual"></div>
+      </div>
+      <div class="balance-row">
+        <div class="bal-box prev"><span class="bal-lbl">Previous Balance</span><span class="bal-val" style="color:var(--text)">฿ 5,000</span><span class="bal-sub">Before this order</span></div>
+        <div class="bal-box add"><span class="bal-lbl">Order Amount Added</span><span class="bal-val" style="color:var(--amber)">+ ฿ 4,050</span><span class="bal-sub">This transaction</span></div>
+        <div class="bal-box new"><span class="bal-lbl">New Account Balance</span><span class="bal-val" style="color:var(--green)">฿ 9,050</span><span class="bal-sub">Updated total</span></div>
+      </div>
+      <div class="fp-bar">Updates <strong>Account File (ILF)</strong> — classified as an <strong>External Input (EI)</strong>.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">⚙️ Actions</div>
+    <div class="card-body">
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="switchPage('p6')">✔ Apply Updates &amp; Generate Documents →</button>
+        <button class="btn btn-red">↩ Rollback</button>
+      </div>
+      <div class="alert alert-success" style="margin-top:14px;margin-bottom:0"><span class="alert-icon">✅</span><div><strong>Update Successful:</strong> Stock File and Account File have been updated. Transaction ID: TXN-20260416-042</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     PAGE 6 – Dispatch Notes & Invoice
+═════════════════════════════════════════════════════════ -->
+<div class="content" id="p6">
+  <div class="page-title">Dispatch Notes &amp; Invoice</div>
+  <div class="page-sub">Generate and print the dispatch note and customer invoice for the confirmed order.</div>
+
+  <div class="alert alert-info"><span class="alert-icon">ℹ️</span><div>Both documents are <strong>External Outputs (EO)</strong> — derived from Order File, Stock File, and Account File data. No data is modified when generating these documents.</div></div>
+
+  <div class="two-col">
+    <!-- Dispatch Note -->
+    <div class="card" style="margin-bottom:0">
+      <div class="doc-header"><h3>🚚 Dispatch Note</h3><p>Order: ORD-0042 &nbsp;|&nbsp; 16 Apr 2026</p></div>
+      <div class="doc-body">
+        <div class="form-row" style="margin-bottom:8px">
+          <div class="form-group"><label class="lbl">Deliver To</label><input class="inp ro" readonly value="Somchai Jaidee"></div>
+        </div>
+        <div class="form-group" style="margin-bottom:12px"><label class="lbl">Delivery Address</label><input class="inp ro" readonly value="123 Main St, Sukhumvit, Bangkok 10110"></div>
+        <div class="form-group" style="margin-bottom:12px"><label class="lbl">Phone</label><input class="inp ro" readonly value="081-234-5678"></div>
+        <hr class="doc-divider">
+        <div class="tbl-wrap" style="margin-bottom:12px">
+          <table>
+            <thead><tr><th>Item Code</th><th>Description</th><th>Qty</th></tr></thead>
+            <tbody>
+              <tr><td>ITM-001</td><td>Coffee Maker</td><td>2</td></tr>
+              <tr><td>ITM-005</td><td>Paper Cups (100 pcs)</td><td>5</td></tr>
+              <tr><td>ITM-012</td><td>Stainless Steel Mug</td><td>3</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="font-size:.8rem;color:var(--muted);margin-bottom:12px">Total Items: 3 lines &nbsp;|&nbsp; Total Units: 10 &nbsp;|&nbsp; Warehouse: Main Store</div>
+        <div class="form-group" style="margin-bottom:12px"><label class="lbl">Prepared By (Signature)</label><div class="sig-box"></div></div>
+        <div class="form-group" style="margin-bottom:16px"><label class="lbl">Received By (Customer Signature)</label><div class="sig-box"></div></div>
+        <button class="btn btn-navy" style="width:100%">🖨 Print Dispatch Note</button>
+      </div>
+    </div>
+
+    <!-- Invoice -->
+    <div class="card" style="margin-bottom:0">
+      <div class="doc-header" style="background:var(--navy)"><h3>🧾 Tax Invoice / Receipt</h3><p>INV-2026-0042 &nbsp;|&nbsp; 16 Apr 2026</p></div>
+      <div class="doc-body">
+        <div class="form-row" style="margin-bottom:8px">
+          <div class="form-group"><label class="lbl">Bill To</label><input class="inp ro" readonly value="Somchai Jaidee (C001)"></div>
+        </div>
+        <div class="form-group" style="margin-bottom:8px"><label class="lbl">Billing Address</label><input class="inp ro" readonly value="123 Main St, Sukhumvit, Bangkok 10110"></div>
+        <div class="form-group" style="margin-bottom:12px"><label class="lbl">Contact</label><input class="inp ro" readonly value="081-234-5678 | somchai@email.com"></div>
+        <hr class="doc-divider">
+        <div class="tbl-wrap" style="margin-bottom:10px">
+          <table>
+            <thead><tr><th>Code</th><th>Description</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
+            <tbody>
+              <tr><td>ITM-001</td><td>Coffee Maker</td><td>2</td><td>฿ 1,200</td><td><strong>฿ 2,400</strong></td></tr>
+              <tr><td>ITM-005</td><td>Paper Cups</td><td>5</td><td>฿ 120</td><td><strong>฿ 600</strong></td></tr>
+              <tr><td>ITM-012</td><td>Steel Mug</td><td>3</td><td>฿ 350</td><td><strong>฿ 1,050</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="doc-row"><span>Subtotal</span><span>฿ 4,050</span></div>
+        <div class="doc-row"><span>Discount</span><span>— ฿ 0</span></div>
+        <div class="doc-row"><span>VAT (7%)</span><span>฿ 283.50</span></div>
+        <div class="doc-row total"><span>GRAND TOTAL</span><span>฿ 4,333.50</span></div>
+        <hr class="doc-divider">
+        <div class="form-group" style="margin-bottom:10px"><label class="lbl">Payment Method</label>
+          <select class="inp"><option>Cash</option><option>Bank Transfer</option><option>Credit Card</option></select></div>
+        <div class="form-group" style="margin-bottom:14px"><label class="lbl">Remarks</label><input class="inp" placeholder="—"></div>
+        <div style="font-size:.8rem;color:var(--muted);margin-bottom:14px;text-align:center">Thank you for your business! 🙏</div>
+        <button class="btn btn-navy" style="width:100%">🖨 Print Invoice</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- .main -->
+</div><!-- .app-shell -->
+
+<script>
+function switchPage(id) {
+  document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('[data-page="'+id+'"]').forEach(el => el.classList.add('active'));
+}
+</script>
+</body>
+</html>
